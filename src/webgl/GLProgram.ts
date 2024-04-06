@@ -16,13 +16,15 @@ type BufferData = {
   offset?: number;
 };
 
-type UniformMap = { [key: string]: WebGLUniformLocation };
-
 class GLProgram {
   private program: WebGLProgram;
   private buffers: { [key: string]: BufferData } = {};
-  private uniforms: UniformMap = {};
+  private vaos: { [key: string]: WebGLVertexArrayObject } = {};
+  private uniforms: { [key: string]: WebGLUniformLocation } = {};
   private attributeLocations: { [attr: string]: number } = {};
+
+  private vaoInProgress: { name: string; vao: WebGLVertexArrayObject } | null =
+    null;
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -53,6 +55,11 @@ class GLProgram {
     stride?: number,
     offset?: number
   ) {
+    const newBuffer = this.gl.createBuffer();
+    if (newBuffer === null) {
+      throw new Error(`Failed to allocate buffer name=${bufferName}`);
+    }
+
     let attributeLocation = this.attributeLocations[attributeName];
     if (attributeLocation === undefined) {
       attributeLocation = getAttributeLocation(
@@ -61,12 +68,6 @@ class GLProgram {
         attributeName
       );
       this.attributeLocations[attributeName] = attributeLocation;
-      this.gl.enableVertexAttribArray(attributeLocation);
-    }
-
-    const newBuffer = this.gl.createBuffer();
-    if (newBuffer === null) {
-      throw new Error(`Failed to allocate buffer name=${bufferName}`);
     }
 
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, newBuffer);
@@ -75,6 +76,7 @@ class GLProgram {
       bufferContent,
       this.gl.STATIC_DRAW
     );
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 
     const bufferData: BufferData = {
       buffer: newBuffer,
@@ -110,6 +112,7 @@ class GLProgram {
       stride,
       offset,
     } = bufferData;
+    this.gl.enableVertexAttribArray(attributeLocation);
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
     this.gl.vertexAttribPointer(
       attributeLocation,
@@ -119,6 +122,40 @@ class GLProgram {
       stride ?? 0,
       offset ?? 0
     );
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+  }
+
+  startVAO(vaoName: string) {
+    const vao = this.gl.createVertexArray();
+    if (!vao) {
+      throw new Error(`Unable to allocate VAO name=${vaoName}`);
+    }
+
+    this.gl.bindVertexArray(vao);
+    this.vaoInProgress = { name: vaoName, vao };
+  }
+
+  endVAO() {
+    if (!this.vaoInProgress) {
+      throw new Error("VAO creation is not in progress.");
+    }
+    const { name, vao } = this.vaoInProgress;
+
+    this.vaos[name] = vao;
+    this.vaoInProgress = null;
+    this.gl.bindVertexArray(null);
+  }
+
+  bindVAO(vaoName: string) {
+    const vao = this.vaos[vaoName];
+    if (!vao) {
+      throw new Error(`vaoName: ${vaoName} was not found.`);
+    }
+    this.gl.bindVertexArray(vao);
+  }
+
+  clearVAO() {
+    this.gl.bindVertexArray(null);
   }
 
   drawTriangles() {

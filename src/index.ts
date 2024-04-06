@@ -71,14 +71,22 @@ glProgram.setUniform("canvasSize", canvas.width, canvas.height);
 
 glProgram.clear(0.08, 0.08, 0.08, 1.0);
 
+glProgram.startVAO("RGB_Triangle");
 glProgram.setAttributePointer("position");
-
 glProgram.setAttributePointer("rgbColor");
+glProgram.endVAO();
+
+glProgram.startVAO("Fiery_Triangle");
+glProgram.setAttributePointer("position");
+glProgram.setAttributePointer("fireyColor");
+glProgram.endVAO();
+
 glProgram.setUniform("shapeSize", 200);
 glProgram.setUniform("shapeLocation", 300, 600);
+glProgram.bindVAO("RGB_Triangle");
 glProgram.drawTriangles();
 
-glProgram.setAttributePointer("fireyColor");
 glProgram.setUniform("shapeSize", 100);
 glProgram.setUniform("shapeLocation", 650, 300);
+glProgram.bindVAO("Fiery_Triangle");
 glProgram.drawTriangles();

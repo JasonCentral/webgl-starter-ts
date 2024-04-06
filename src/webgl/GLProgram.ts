@@ -22,6 +22,7 @@ class GLProgram {
   private program: WebGLProgram;
   private buffers: { [key: string]: BufferData } = {};
   private uniforms: UniformMap = {};
+  private attributeLocations: { [attr: string]: number } = {};
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -52,11 +53,17 @@ class GLProgram {
     stride?: number,
     offset?: number
   ) {
-    const attributeLocation = getAttributeLocation(
-      this.gl,
-      this.program,
-      attributeName
-    );
+    let attributeLocation = this.attributeLocations[attributeName];
+    if (attributeLocation === undefined) {
+      attributeLocation = getAttributeLocation(
+        this.gl,
+        this.program,
+        attributeName
+      );
+      this.attributeLocations[attributeName] = attributeLocation;
+      this.gl.enableVertexAttribArray(attributeLocation);
+    }
+
     const newBuffer = this.gl.createBuffer();
     if (newBuffer === null) {
       throw new Error(`Failed to allocate buffer name=${bufferName}`);
@@ -103,7 +110,6 @@ class GLProgram {
       stride,
       offset,
     } = bufferData;
-    this.gl.enableVertexAttribArray(attributeLocation);
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
     this.gl.vertexAttribPointer(
       attributeLocation,

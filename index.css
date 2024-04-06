@@ -1,6 +1,7 @@
 canvas.webgl {
+  width: 800px;
+  height: 800px;
   display: block;
-  border: 1px solid black;
   margin: 0 auto;
   background-color: salmon;
 }

@@ -56,6 +56,15 @@ glProgram.createBuffer(
   true
 );
 
+glProgram.createBuffer(
+  "fireyColor",
+  fireyTriangleColors,
+  "vertexColor",
+  3,
+  gl.UNSIGNED_BYTE,
+  true
+);
+
 glProgram.initProgram();
 glProgram.registerUniforms(["shapeLocation", "shapeSize", "canvasSize"]);
 glProgram.setUniform("canvasSize", canvas.width, canvas.height);
@@ -64,12 +73,13 @@ gl.clearColor(0.08, 0.08, 0.08, 1.0);
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 glProgram.setAttributePointer("position");
-glProgram.setAttributePointer("rgbColor");
 
+glProgram.setAttributePointer("rgbColor");
 glProgram.setUniform("shapeSize", 200);
 glProgram.setUniform("shapeLocation", 300, 600);
 glProgram.drawTriangles();
 
+glProgram.setAttributePointer("fireyColor");
 glProgram.setUniform("shapeSize", 100);
 glProgram.setUniform("shapeLocation", 650, 300);
 glProgram.drawTriangles();

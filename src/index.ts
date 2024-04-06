@@ -1,9 +1,9 @@
+import GLProgram from "./webgl/GLProgram.js";
+import { getGL } from "./webgl/glUtil.js";
 import {
-  compileShader,
-  createProgram,
-  getGL,
-  initProgram,
-} from "./webgl/glUtil.js";
+  basicFragmentShaderSourceCode,
+  basicVertexShaderSourceCode,
+} from "./webgl/shaders.js";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 const gl = getGL(canvas);
@@ -11,52 +11,65 @@ const gl = getGL(canvas);
 //prettier-ignore
 const triangleVerticesCpuBuffer = new Float32Array([
     // Top middle
-    0.0, 0.5,
+    0.0, 1,
     // bottom left
-    -0.5, -0.5,
+    -1, -1,
     // bottom right
-    0.5, -0.5
+    1, -1
 ])
 
-// const triangleGeoBuffer = gl.createBuffer();
-// gl.bindBuffer(gl.ARRAY_BUFFER, triangleGeoBuffer);
+//prettier-ignore
+const rgbTriangleColors = new Uint8Array([
+    255, 0, 0,
+    0, 255, 0,
+    0, 0, 255
+]);
 
-const vertexShaderSourceCode = `#version 300 es
-precision mediump float;
+//prettier-ignore
+const fireyTriangleColors = new Uint8Array([
+    229, 47, 15,
+    246, 206, 29,
+    233, 154, 26
+]);
 
-in vec2 vertexPosition;
-
-void main() {
-    gl_Position = vec4(vertexPosition, 0.0, 1.0);
-}`;
-
-const fragmentShaderSourceCode = `#version 300 es
-precision mediump float;
-
-out vec4 outputColor;
-
-void main() {
-    outputColor = vec4(0.294, 0.0, 0.51, 1.0);
-}`;
-
-const vertexShader = compileShader(
+const glProgram = new GLProgram(
   gl,
-  vertexShaderSourceCode,
-  gl.VERTEX_SHADER
-);
-const fragmentShader = compileShader(
-  gl,
-  fragmentShaderSourceCode,
-  gl.FRAGMENT_SHADER
+  basicVertexShaderSourceCode,
+  basicFragmentShaderSourceCode
 );
 
-const triangleShaderProgram = createProgram(gl, vertexShader, fragmentShader);
+glProgram.createBuffer(
+  "position",
+  triangleVerticesCpuBuffer,
+  "vertexPosition",
+  2,
+  gl.FLOAT,
+  false
+);
+
+glProgram.createBuffer(
+  "rgbColor",
+  rgbTriangleColors,
+  "vertexColor",
+  3,
+  gl.UNSIGNED_BYTE,
+  true
+);
+
+glProgram.initProgram();
+glProgram.registerUniforms(["shapeLocation", "shapeSize", "canvasSize"]);
+glProgram.setUniform("canvasSize", canvas.width, canvas.height);
 
 gl.clearColor(0.08, 0.08, 0.08, 1.0);
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-initProgram(gl, triangleShaderProgram, "vertexPosition", 2);
-gl.bufferData(gl.ARRAY_BUFFER, triangleVerticesCpuBuffer, gl.STATIC_DRAW);
+glProgram.setAttributePointer("position");
+glProgram.setAttributePointer("rgbColor");
 
-// Draw Call / Primitive assembly
-gl.drawArrays(gl.TRIANGLES, 0, 3);
+glProgram.setUniform("shapeSize", 200);
+glProgram.setUniform("shapeLocation", 300, 600);
+glProgram.drawTriangles();
+
+glProgram.setUniform("shapeSize", 100);
+glProgram.setUniform("shapeLocation", 650, 300);
+glProgram.drawTriangles();

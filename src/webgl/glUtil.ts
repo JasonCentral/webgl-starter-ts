@@ -54,37 +54,41 @@ function resizeCanvasIfNeeded(canvas: HTMLCanvasElement) {
   }
 }
 
-function initProgram(
+function getAttributeLocation(
   gl: WebGL2RenderingContext,
   program: WebGLProgram,
-  vertexAttributeName: string,
-  dimension: number
+  attributeName: string
 ) {
-  const positionBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  const location = gl.getAttribLocation(program, attributeName);
+  if (location < 0) {
+    throw new Error(`Attribute name: ${attributeName} not found on program.`);
+  }
+  return location;
+}
 
-  const vertexAttributeLocation = gl.getAttribLocation(
-    program,
-    vertexAttributeName
+function getUniformLocations(
+  gl: WebGL2RenderingContext,
+  program: WebGLProgram,
+  uniformNames: string[]
+) {
+  const locations = uniformNames.map((name) =>
+    gl.getUniformLocation(program, name)
   );
-  if (vertexAttributeLocation < 0) {
+  if (locations.some((loc) => loc === null)) {
     throw new Error(
-      `Attribute name: ${vertexAttributeName} not found on program.`
+      `Failed to get uniform locations, (${locations
+        .map((loc, idx) => `${uniformNames[idx]}=${loc}`)
+        .join(", ")})`
     );
   }
-  resizeCanvasIfNeeded(gl.canvas as HTMLCanvasElement);
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  gl.useProgram(program);
-  gl.enableVertexAttribArray(vertexAttributeLocation);
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  gl.vertexAttribPointer(
-    vertexAttributeLocation,
-    dimension,
-    gl.FLOAT,
-    false,
-    0,
-    0
+  const locationsMap = locations.reduce(
+    (acc: { [key: string]: WebGLUniformLocation }, loc, idx) => {
+      acc[uniformNames[idx]] = loc!;
+      return acc;
+    },
+    {}
   );
+  return locationsMap;
 }
 
 export {
@@ -92,5 +96,6 @@ export {
   compileShader,
   createProgram,
   resizeCanvasIfNeeded,
-  initProgram,
+  getUniformLocations,
+  getAttributeLocation,
 };

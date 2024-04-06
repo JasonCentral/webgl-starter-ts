@@ -45,7 +45,7 @@ class GLProgram {
 
   createBuffer(
     bufferName: string,
-    bufferContent: any,
+    bufferContent: ArrayBuffer,
     attributeName: string,
     size: number,
     type: number,

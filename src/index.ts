@@ -69,8 +69,7 @@ glProgram.initProgram();
 glProgram.registerUniforms(["shapeLocation", "shapeSize", "canvasSize"]);
 glProgram.setUniform("canvasSize", canvas.width, canvas.height);
 
-gl.clearColor(0.08, 0.08, 0.08, 1.0);
-gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+glProgram.clear(0.08, 0.08, 0.08, 1.0);
 
 glProgram.setAttributePointer("position");
 

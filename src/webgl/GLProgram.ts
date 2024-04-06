@@ -119,6 +119,11 @@ class GLProgram {
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
   }
 
+  clear(red: number, blue: number, green: number, alpha: number) {
+    this.gl.clearColor(red, blue, green, alpha);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+  }
+
   registerUniforms(uniformNames: string[]) {
     this.uniforms = getUniformLocations(this.gl, this.program, uniformNames);
   }

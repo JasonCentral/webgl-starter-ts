@@ -91,6 +91,21 @@ class GLProgram {
     this.buffers[bufferName] = bufferData;
   }
 
+  updateBuffer(bufferName: string, bufferContent: ArrayBuffer) {
+    const bufferData = this.buffers[bufferName];
+    if (!bufferData) {
+      throw new Error(`Failed to find buffer name=${bufferName}`);
+    }
+
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, bufferData.buffer);
+    this.gl.bufferData(
+      this.gl.ARRAY_BUFFER,
+      bufferContent,
+      this.gl.STATIC_DRAW
+    );
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+  }
+
   initProgram() {
     resizeCanvasIfNeeded(this.gl.canvas as HTMLCanvasElement);
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
@@ -126,6 +141,10 @@ class GLProgram {
   }
 
   startVAO(vaoName: string) {
+    if (vaoName in this.vaos) {
+      throw new Error(`Duplicate VAO name=${vaoName}`);
+    }
+
     const vao = this.gl.createVertexArray();
     if (!vao) {
       throw new Error(`Unable to allocate VAO name=${vaoName}`);
@@ -158,8 +177,8 @@ class GLProgram {
     this.gl.bindVertexArray(null);
   }
 
-  drawTriangles() {
-    this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
+  draw(count: number) {
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, count);
   }
 
   clear(red: number, blue: number, green: number, alpha: number) {
